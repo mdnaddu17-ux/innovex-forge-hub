@@ -44,7 +44,8 @@ const LoginModal = ({ open, onClose }: Props) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-[90] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-2xl p-8 glow-box"
+            className="fixed z-[90] top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md glass-strong rounded-2xl p-8 glow-box"
+            style={{ transform: 'translate(-50%, -50%)' }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl gradient-text tracking-wider">Engineer Login</h2>

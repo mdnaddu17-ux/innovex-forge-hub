@@ -23,7 +23,8 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-[90] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg glass-strong rounded-2xl p-10 glow-box text-center"
+            className="fixed z-[90] top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-lg glass-strong rounded-2xl p-10 glow-box text-center"
+            style={{ transform: 'translate(-50%, -50%)' }}
           >
             <button
               onClick={onClose}
