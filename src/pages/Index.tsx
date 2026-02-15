@@ -38,11 +38,12 @@ const Index = () => {
           transition={{ duration: 0.8 }}
           className="relative z-10 text-center px-4 max-w-4xl"
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold gradient-text glow-text mb-6 leading-tight">
-            BUILD TO
-            <br />
-            INNOVATE
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-text glow-text mb-2 leading-tight">
+            InnoveX
           </h1>
+          <p className="text-xl md:text-2xl lg:text-3xl font-display text-foreground/80 tracking-wider mb-6">
+            Build to Innovate
+          </p>
 
           {/* Animated underline */}
           <motion.div

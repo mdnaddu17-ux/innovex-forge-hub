@@ -10,6 +10,7 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
+  { label: 'Home', path: '/', roles: ['guest', 'member', 'admin'] },
   { label: 'About Us', path: '/about', roles: ['guest', 'member', 'admin'] },
   { label: 'Projects', path: '/projects', roles: ['guest', 'member', 'admin'] },
   { label: 'Add Project', path: '/add-project', roles: ['member', 'admin'] },
