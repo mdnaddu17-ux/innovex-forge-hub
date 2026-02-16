@@ -1,12 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MOCK_PROJECTS } from '@/data/projects';
 import { supabase } from '@/lib/supabase';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import type { Project } from '@/data/projects';
+
+const SourceCodeSection = ({ code }: { code: string }) => {
+  const [copied, setCopied] = useState(false);
+  const isLink = code.trim().startsWith('http');
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <section>
+      <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">SOURCE CODE</h2>
+      {isLink ? (
+        <a
+          href={code}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
+        >
+          View Source Repository <ExternalLink size={14} />
+        </a>
+      ) : (
+        <div className="relative">
+          <pre className="glass rounded-xl p-4 text-sm text-green-400 overflow-x-auto whitespace-pre-wrap break-words max-h-96">
+            <code>{code}</code>
+          </pre>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="absolute top-3 right-3 p-2 rounded-lg glass text-muted-foreground hover:text-primary transition-colors"
+            aria-label="Copy source code"
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+};
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -97,38 +138,25 @@ const ProjectDetail = () => {
             </>
           )}
 
-          <section className="mb-8">
-            <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
-            {project.video && project.video !== '' ? (
-              <a
-                href={project.video}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
-              >
-                Watch Video <ExternalLink size={14} />
-              </a>
-            ) : (
-              <div className="glass rounded-xl p-8 text-center text-muted-foreground">
-                Video demonstration coming soon
-              </div>
-            )}
-          </section>
-
-          <div className="section-divider mb-8" />
+          {project.video && project.video.trim() !== '' && (
+            <>
+              <section className="mb-8">
+                <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
+                <a
+                  href={project.video}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
+                >
+                  Watch Video <ExternalLink size={14} />
+                </a>
+              </section>
+              <div className="section-divider mb-8" />
+            </>
+          )}
 
           {project.source_code && (
-            <section>
-              <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">SOURCE CODE</h2>
-              <a
-                href={project.source_code}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
-              >
-                View Repository <ExternalLink size={14} />
-              </a>
-            </section>
+            <SourceCodeSection code={project.source_code} />
           )}
         </motion.div>
       </div>

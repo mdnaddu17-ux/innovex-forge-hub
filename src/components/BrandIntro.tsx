@@ -25,7 +25,7 @@ const BrandIntro = ({ onComplete }: Props) => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="font-display text-3xl md:text-5xl gradient-text glow-text tracking-[0.3em] mb-10"
+            className="font-display text-2xl sm:text-3xl md:text-5xl gradient-text glow-text tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em] mb-10 max-w-full px-4 text-center break-words"
           >
             INNOVEXHUB.IN
           </motion.h1>

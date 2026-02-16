@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -6,10 +7,11 @@ import { Upload, X } from 'lucide-react';
 import { uploadImage } from '@/lib/uploadImage';
 import { supabase } from '@/lib/supabase';
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const AddProject = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -66,9 +68,24 @@ const AddProject = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
-    if (!imageFile) {
-      setImageError('Please upload a project image.');
+    if (!form.title.trim() || !form.description.trim() || !imageFile) {
+      toast({
+        title: 'Missing Fields',
+        description: 'Title, Description and Image are required.',
+        variant: 'destructive',
+      });
+      if (!imageFile) setImageError('Please upload a project image.');
+      return;
+    }
+
+    if (!form.sourceCode || !form.sourceCode.trim()) {
+      toast({
+        title: 'Missing Fields',
+        description: 'Source code or repository link is required.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -77,27 +94,31 @@ const AddProject = () => {
       const imageUrl = await uploadImage(imageFile);
 
       const { error } = await supabase.from('projects').insert({
-        title: form.title,
-        description: form.description,
+        title: form.title.trim(),
+        description: form.description.trim(),
         image_url: imageUrl,
-        components: form.components,
-        source_code: form.sourceCode,
-        video: form.video,
+        components: form.components?.trim() || null,
+        source_code: form.sourceCode.trim(),
+        video: form.video?.trim() || null,
+        created_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
-      toast({ title: 'Project Submitted', description: 'Your project has been added to the lab.' });
-      setForm({ title: '', description: '', video: '', components: '', sourceCode: '' });
-      clearImage();
-    } catch (err: any) {
-      toast({ title: 'Upload Failed', description: err.message || 'Something went wrong.', variant: 'destructive' });
+      toast({
+        title: 'Project Submitted',
+        description: 'Your project has been added to the lab.',
+      });
+      navigate('/');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
+      toast({ title: 'Upload Failed', description: message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const isSubmitDisabled = submitting || !!imageError || !imageFile;
+  const isSubmitDisabled = submitting || !!imageError;
 
   return (
     <div className="pt-24 pb-16 px-4 min-h-screen">
@@ -108,26 +129,67 @@ const AddProject = () => {
           </h1>
 
           <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 glow-box space-y-6">
-            {[
-              { label: 'Title', field: 'title', type: 'text' },
-              { label: 'Video URL', field: 'video', type: 'url' },
-              { label: 'Components', field: 'components', type: 'text' },
-              { label: 'Source Code URL', field: 'sourceCode', type: 'url' },
-            ].map(({ label, field, type }) => (
-              <div key={field}>
-                <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">{label}</label>
-                <input
-                  type={type}
-                  value={(form as any)[field]}
-                  onChange={(e) => handleChange(field, e.target.value)}
-                  className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-                  required={field === 'title'}
-                />
-              </div>
-            ))}
-
+            {/* Title */}
             <div>
-              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">Description</label>
+              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                required
+              />
+            </div>
+
+            {/* Video URL (optional) */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">
+                {'Video URL (optional)'}
+              </label>
+              <input
+                type="text"
+                value={form.video}
+                onChange={(e) => handleChange('video', e.target.value)}
+                placeholder="YouTube or Drive link"
+                className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+              />
+            </div>
+
+            {/* Components */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">
+                Components
+              </label>
+              <input
+                type="text"
+                value={form.components}
+                onChange={(e) => handleChange('components', e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+              />
+            </div>
+
+            {/* Source Code -- accepts GitHub, Drive, or raw code */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">
+                Source Code / Repository Link
+              </label>
+              <textarea
+                value={form.sourceCode}
+                onChange={(e) => handleChange('sourceCode', e.target.value)}
+                rows={3}
+                placeholder="GitHub link, Drive link, or paste raw code"
+                className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all resize-none"
+                required
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">
+                Description
+              </label>
               <textarea
                 value={form.description}
                 onChange={(e) => handleChange('description', e.target.value)}
