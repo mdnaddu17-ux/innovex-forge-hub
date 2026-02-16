@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { uploadImage } from '@/lib/uploadImage';
-import { Upload, X, Trash2 } from 'lucide-react';
+import { Upload, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import ImageWithFallback from '@/components/ImageWithFallback';
 
 const tabs = ['Create User', 'Goals', 'Projects'] as const;
@@ -41,6 +41,7 @@ const AdminPanel = () => {
   const [newUserCollege, setNewUserCollege] = useState('');
   const [newUserRole, setNewUserRole] = useState<'member' | 'admin'>('member');
   const [creatingUser, setCreatingUser] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Goals state
   const [goalText, setGoalText] = useState('');
@@ -203,7 +204,23 @@ const AdminPanel = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">Password</label>
-                  <input type="password" className={inputClass} value={newUserPwd} onChange={(e) => setNewUserPwd(e.target.value)} required />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className={`${inputClass} pr-12`}
+                      value={newUserPwd}
+                      onChange={(e) => setNewUserPwd(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-display tracking-wider text-muted-foreground mb-2">Name</label>
