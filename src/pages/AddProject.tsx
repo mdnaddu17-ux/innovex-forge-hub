@@ -97,9 +97,9 @@ const AddProject = () => {
         title: form.title.trim(),
         description: form.description.trim(),
         image_url: imageUrl,
-        components: form.components?.trim() || null,
+        components: form.components?.trim() || '',
         source_code: form.sourceCode.trim(),
-        video: form.video?.trim() || null,
+        video_link: form.video?.trim() || null,
         created_at: new Date().toISOString(),
       });
 
