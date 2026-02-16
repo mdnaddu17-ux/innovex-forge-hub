@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
 import { MOCK_PROJECTS } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import type { Project } from '@/data/projects';
 import heroBg from '@/assets/hero-bg.jpg';
 import goalImage from '@/assets/goal-future.jpg';
@@ -54,12 +55,32 @@ const GOALS = [
 ];
 
 const APPLY_MAILTO =
-  'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No/Any reference Id:';
+  'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No / Reference ID:%0A%0AWhy do you want InnoveX Hub membership? (Minimum 100 words):%0A';
+
+interface DbGoal {
+  id: string;
+  text: string;
+  image_url: string;
+  created_at: string;
+}
 
 const Index = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
+  const [dbProjects, setDbProjects] = useState<Project[]>(MOCK_PROJECTS);
+  const [dbGoals, setDbGoals] = useState<DbGoal[] | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const [projRes, goalRes] = await Promise.all([
+        supabase.from('projects').select('*').order('created_at', { ascending: false }),
+        supabase.from('goals').select('*').order('created_at', { ascending: false }),
+      ]);
+      if (projRes.data && projRes.data.length > 0) setDbProjects(projRes.data);
+      if (goalRes.data) setDbGoals(goalRes.data);
+    })();
+  }, []);
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {
@@ -203,7 +224,7 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-            {MOCK_PROJECTS.map((project, i) => (
+            {dbProjects.map((project, i) => (
               <ProjectCard
                 key={project.id}
                 project={project}
@@ -235,7 +256,36 @@ const Index = () => {
           </motion.div>
 
           <div className="space-y-16">
-            {GOALS.map((goal, i) => {
+            {(dbGoals && dbGoals.length > 0 ? dbGoals : null)?.map((goal, i) => {
+              const isEven = i % 2 === 0;
+              return (
+                <motion.div
+                  key={goal.id}
+                  initial={{ opacity: 0, x: isEven ? -60 : 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.6 }}
+                  className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}
+                >
+                  {goal.image_url && (
+                    <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
+                      <ImageWithFallback
+                        src={goal.image_url}
+                        alt={goal.text}
+                        loading="lazy"
+                        className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+
+                  <div className={goal.image_url ? 'md:w-1/2' : 'w-full'}>
+                    <p className="text-foreground/70 leading-relaxed">{goal.text}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+            {/* Fallback to static goals when DB is empty */}
+            {(!dbGoals || dbGoals.length === 0) && GOALS.map((goal, i) => {
               const isEven = i % 2 === 0;
               return (
                 <motion.div

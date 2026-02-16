@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import goalImage from '@/assets/goal-future.jpg';
 
-const GOALS = [
+interface DbGoal {
+  id: string;
+  text: string;
+  image_url: string;
+  created_at: string;
+}
+
+const STATIC_GOALS = [
   {
     title: 'AI-Powered Research Lab',
     description: 'Integrating machine learning tools directly into the lab workflow — from computer vision QA to predictive maintenance on equipment.',
@@ -20,6 +30,18 @@ const GOALS = [
 ];
 
 const FutureGoals = () => {
+  const [dbGoals, setDbGoals] = useState<DbGoal[] | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('goals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data) setDbGoals(data);
+    })();
+  }, []);
+
   return (
     <div className="pt-24 pb-16 px-4 min-h-screen">
       <div className="container mx-auto max-w-5xl">
@@ -32,38 +54,66 @@ const FutureGoals = () => {
             Future Goals
           </h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            What we're building next at InnoveX Hub
+            {"What we're building next at InnoveX Hub"}
           </p>
         </motion.div>
 
         <div className="space-y-16">
-          {GOALS.map((goal, i) => {
-            const isEven = i % 2 === 0;
-            return (
-              <motion.div
-                key={goal.title}
-                initial={{ opacity: 0, x: isEven ? -60 : 60 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.6 }}
-                className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}
-              >
-                <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
-                  <img
-                    src={goal.image}
-                    alt={goal.title}
-                    loading="lazy"
-                    className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-
-                <div className="md:w-1/2">
-                  <h2 className="font-display text-xl tracking-wider text-primary glow-text mb-4">{goal.title}</h2>
-                  <p className="text-foreground/70 leading-relaxed">{goal.description}</p>
-                </div>
-              </motion.div>
-            );
-          })}
+          {/* Render DB goals if available */}
+          {dbGoals && dbGoals.length > 0
+            ? dbGoals.map((goal, i) => {
+                const isEven = i % 2 === 0;
+                return (
+                  <motion.div
+                    key={goal.id}
+                    initial={{ opacity: 0, x: isEven ? -60 : 60 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{ duration: 0.6 }}
+                    className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}
+                  >
+                    {goal.image_url && (
+                      <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
+                        <ImageWithFallback
+                          src={goal.image_url}
+                          alt={goal.text}
+                          loading="lazy"
+                          className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <div className={goal.image_url ? 'md:w-1/2' : 'w-full'}>
+                      <p className="text-foreground/70 leading-relaxed">{goal.text}</p>
+                    </div>
+                  </motion.div>
+                );
+              })
+            : STATIC_GOALS.map((goal, i) => {
+                const isEven = i % 2 === 0;
+                return (
+                  <motion.div
+                    key={goal.title}
+                    initial={{ opacity: 0, x: isEven ? -60 : 60 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{ duration: 0.6 }}
+                    className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}
+                  >
+                    <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
+                      <ImageWithFallback
+                        src={goal.image}
+                        alt={goal.title}
+                        loading="lazy"
+                        className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="md:w-1/2">
+                      <h2 className="font-display text-xl tracking-wider text-primary glow-text mb-4">{goal.title}</h2>
+                      <p className="text-foreground/70 leading-relaxed">{goal.description}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
         </div>
       </div>
     </div>

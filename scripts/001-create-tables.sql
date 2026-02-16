@@ -8,25 +8,26 @@ create table if not exists users (
   password text not null,
   name text,
   college text,
-  role text check (role in ('admin', 'member'))
+  role text check (role in ('admin', 'member')) not null
 );
 
 -- PROJECTS table
 create table if not exists projects (
   id uuid primary key default uuid_generate_v4(),
-  title text,
-  description text,
-  image_url text,
+  title text not null,
+  description text not null,
+  image_url text not null,
   components text,
   source_code text,
-  uploaded_by uuid references users(id),
+  video text,
+  uploaded_by uuid,
   created_at timestamp default now()
 );
 
 -- GOALS table
 create table if not exists goals (
   id uuid primary key default uuid_generate_v4(),
-  text text,
+  text text not null,
   image_url text,
   created_at timestamp default now()
 );
