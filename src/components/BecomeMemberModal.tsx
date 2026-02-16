@@ -52,7 +52,7 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
                 className="px-10"
                 onClick={() => {
                   window.location.href =
-                    'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No/Any reference Id:';
+                    'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No / Reference ID:%0A%0AWhy do you want InnoveX Hub membership? (Minimum 100 words):%0A';
                 }}
               >
                 Apply Now

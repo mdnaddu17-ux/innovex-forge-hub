@@ -1,16 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
 import { MOCK_PROJECTS } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import type { Project } from '@/data/projects';
 
 const Projects = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
+  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) setProjects(data);
+    })();
+  }, []);
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {
@@ -37,7 +49,7 @@ const Projects = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {MOCK_PROJECTS.map((project, i) => (
+          {projects.map((project, i) => (
             <ProjectCard key={project.id} project={project} onViewMore={handleViewMore} index={i} />
           ))}
         </div>
