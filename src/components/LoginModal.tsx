@@ -28,16 +28,23 @@ const LoginModal = ({ open, onClose }: Props) => {
     };
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(userId, password);
-    if (success) {
-      toast({ title: 'Welcome back, Engineer.', description: 'You have been authenticated.' });
-      setUserId('');
-      setPassword('');
-      onClose();
-    } else {
-      toast({ title: 'Access Denied', description: 'Invalid credentials.', variant: 'destructive' });
+    setLoading(true);
+    try {
+      const success = await login(userId, password);
+      if (success) {
+        toast({ title: 'Welcome back, Engineer.', description: 'You have been authenticated.' });
+        setUserId('');
+        setPassword('');
+        onClose();
+      } else {
+        toast({ title: 'Access Denied', description: 'Invalid credentials.', variant: 'destructive' });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,14 +103,10 @@ const LoginModal = ({ open, onClose }: Props) => {
                 />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full" size="lg">
-                Authenticate
+              <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading}>
+                {loading ? 'Authenticating...' : 'Authenticate'}
               </Button>
             </form>
-
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Demo: admin/admin123 or member/member123
-            </p>
             </motion.div>
           </div>
         </>

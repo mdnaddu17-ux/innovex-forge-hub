@@ -1,7 +1,4 @@
-import projectRobotics from '@/assets/project-robotics.jpg';
-import projectAi from '@/assets/project-ai.jpg';
-import projectCircuits from '@/assets/project-circuits.jpg';
-import projectDrone from '@/assets/project-drone.jpg';
+import { supabase } from '@/lib/supabase';
 
 export interface Project {
   id: string;
@@ -11,43 +8,54 @@ export interface Project {
   components: string;
   video: string;
   sourceCode: string;
+  uploadedBy?: string;
 }
 
-export const MOCK_PROJECTS: Project[] = [
-  {
-    id: '1',
-    title: 'Autonomous Robotic Arm',
-    description: 'A 6-DOF robotic arm with computer vision integration for precise assembly tasks. Built with Arduino Mega, servo motors, and OpenCV for real-time object detection and manipulation in the engineering lab.',
-    image: projectRobotics,
-    components: 'Arduino Mega, 6x MG996R Servos, Pi Camera, OpenCV, 3D Printed Parts, PCA9685 Driver',
-    video: 'https://example.com/video1',
-    sourceCode: 'https://github.com/innovex/robotic-arm',
-  },
-  {
-    id: '2',
-    title: 'Neural Network Visualizer',
-    description: 'An interactive real-time visualization tool for neural network architectures and training processes. Watch data flow through layers, observe gradient descent, and understand backpropagation visually.',
-    image: projectAi,
-    components: 'Python, TensorFlow, Three.js, WebGL, React, WebSocket Server',
-    video: 'https://example.com/video2',
-    sourceCode: 'https://github.com/innovex/nn-visualizer',
-  },
-  {
-    id: '3',
-    title: 'Custom PCB Design Lab',
-    description: 'Complete PCB design and fabrication workflow — from schematic capture to etching. Includes a reflow soldering station and automated optical inspection system built from scratch.',
-    image: projectCircuits,
-    components: 'KiCad, CNC Mill, UV Exposure Unit, Reflow Oven, AOI Camera System',
-    video: 'https://example.com/video3',
-    sourceCode: 'https://github.com/innovex/pcb-lab',
-  },
-  {
-    id: '4',
-    title: 'Autonomous Survey Drone',
-    description: 'A custom-built quadcopter with autonomous flight capabilities, LIDAR mapping, and real-time telemetry. Designed for environmental monitoring and terrain surveying missions.',
-    image: projectDrone,
-    components: 'Pixhawk FC, LIDAR Lite v3, Raspberry Pi 4, GPS Module, 4G Telemetry',
-    video: 'https://example.com/video4',
-    sourceCode: 'https://github.com/innovex/survey-drone',
-  },
-];
+interface DbProject {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  components: string | null;
+  video_link: string | null;
+  source_code: string | null;
+  uploaded_by: string | null;
+}
+
+function mapRow(row: DbProject): Project {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    image: row.image_url,
+    components: row.components ?? '',
+    video: row.video_link ?? '',
+    sourceCode: row.source_code ?? '',
+    uploadedBy: row.uploaded_by ?? undefined,
+  };
+}
+
+export async function fetchProjects(): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching projects:', error.message);
+    return [];
+  }
+
+  return (data as DbProject[]).map(mapRow);
+}
+
+export async function fetchProjectById(id: string): Promise<Project | null> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return mapRow(data as DbProject);
+}
