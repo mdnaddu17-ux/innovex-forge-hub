@@ -16,6 +16,7 @@ import AddProject from "./pages/AddProject";
 import AdminPanel from "./pages/AdminPanel";
 import BecomeMember from "./pages/BecomeMember";
 import NotFound from "./pages/NotFound";
+import Footer from "@/components/Footer";
 
 import { useState } from "react";
 
@@ -47,6 +48,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
+            <Footer />
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>

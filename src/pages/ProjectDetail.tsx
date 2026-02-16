@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MOCK_PROJECTS } from '@/data/projects';
+import ImageWithFallback from '@/components/ImageWithFallback';
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -24,7 +25,7 @@ const ProjectDetail = () => {
     <div className="pt-20 pb-16 min-h-screen">
       {/* Hero image */}
       <div className="relative h-64 md:h-96 overflow-hidden">
-        <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
+        <ImageWithFallback src={project.image} alt={project.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 

@@ -16,16 +16,23 @@ const LoginModal = ({ open, onClose }: Props) => {
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(userId, password);
-    if (success) {
-      toast({ title: 'Welcome back, Engineer.', description: 'You have been authenticated.' });
-      setUserId('');
-      setPassword('');
-      onClose();
-    } else {
-      toast({ title: 'Access Denied', description: 'Invalid credentials.', variant: 'destructive' });
+    setLoading(true);
+    try {
+      const success = await login(userId, password);
+      if (success) {
+        toast({ title: 'Welcome back, Engineer.', description: 'You have been authenticated.' });
+        setUserId('');
+        setPassword('');
+        onClose();
+      } else {
+        toast({ title: 'Access Denied', description: 'Invalid credentials.', variant: 'destructive' });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,13 +47,13 @@ const LoginModal = ({ open, onClose }: Props) => {
             className="fixed inset-0 z-[80] bg-background/70"
             onClick={onClose}
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-[90] top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md glass-strong rounded-2xl p-8 glow-box"
-            style={{ transform: 'translate(-50%, -50%)' }}
-          >
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md glass-strong rounded-2xl p-8 glow-box pointer-events-auto"
+            >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl gradient-text tracking-wider">Engineer Login</h2>
               <button onClick={onClose} className="text-muted-foreground hover:text-primary transition-colors">
@@ -79,15 +86,16 @@ const LoginModal = ({ open, onClose }: Props) => {
                 />
               </div>
 
-              <Button type="submit" variant="hero" className="w-full" size="lg">
-                Authenticate
+              <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading}>
+                {loading ? 'Authenticating...' : 'Authenticate'}
               </Button>
             </form>
 
             <p className="text-xs text-muted-foreground mt-4 text-center">
-              Demo: admin/admin123 or member/member123
+              Login with your credentials
             </p>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
