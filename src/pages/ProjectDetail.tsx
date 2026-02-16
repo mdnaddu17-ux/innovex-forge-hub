@@ -1,13 +1,35 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MOCK_PROJECTS } from '@/data/projects';
+import { fetchProjectById } from '@/data/projects';
+import type { Project } from '@/data/projects';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const project = MOCK_PROJECTS.find((p) => p.id === id);
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    fetchProjectById(id).then((data) => {
+      setProject(data);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="pt-24 px-4 min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -50,39 +72,52 @@ const ProjectDetail = () => {
 
           <div className="section-divider mb-8" />
 
-          <section className="mb-8">
-            <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">COMPONENTS</h2>
-            <div className="flex flex-wrap gap-2">
-              {project.components.split(',').map((comp, i) => (
-                <span key={i} className="glass px-3 py-1.5 rounded-full text-xs text-primary/80 font-display tracking-wider">
-                  {comp.trim()}
-                </span>
-              ))}
-            </div>
-          </section>
+          {project.components && (
+            <>
+              <section className="mb-8">
+                <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">COMPONENTS</h2>
+                <div className="flex flex-wrap gap-2">
+                  {project.components.split(',').map((comp, i) => (
+                    <span key={i} className="glass px-3 py-1.5 rounded-full text-xs text-primary/80 font-display tracking-wider">
+                      {comp.trim()}
+                    </span>
+                  ))}
+                </div>
+              </section>
+              <div className="section-divider mb-8" />
+            </>
+          )}
 
-          <div className="section-divider mb-8" />
+          {project.video && (
+            <>
+              <section className="mb-8">
+                <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
+                <a
+                  href={project.video}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
+                >
+                  Watch Video <ExternalLink size={14} />
+                </a>
+              </section>
+              <div className="section-divider mb-8" />
+            </>
+          )}
 
-          <section className="mb-8">
-            <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
-            <div className="glass rounded-xl p-8 text-center text-muted-foreground">
-              Video demonstration coming soon
-            </div>
-          </section>
-
-          <div className="section-divider mb-8" />
-
-          <section>
-            <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">SOURCE CODE</h2>
-            <a
-              href={project.sourceCode}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
-            >
-              View Repository <ExternalLink size={14} />
-            </a>
-          </section>
+          {project.sourceCode && (
+            <section>
+              <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">SOURCE CODE</h2>
+              <a
+                href={project.sourceCode}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
+              >
+                View Repository <ExternalLink size={14} />
+              </a>
+            </section>
+          )}
         </motion.div>
       </div>
     </div>

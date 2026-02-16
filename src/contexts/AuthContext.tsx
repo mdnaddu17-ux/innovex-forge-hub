@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export type Role = 'guest' | 'member' | 'admin';
 
@@ -6,32 +7,44 @@ export interface User {
   id: string;
   name: string;
   role: Role;
+  college?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   role: Role;
-  login: (userId: string, password: string) => boolean;
+  login: (userId: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
-
-const MOCK_USERS: Record<string, { password: string; name: string; role: Role }> = {
-  admin: { password: 'admin123', name: 'Admin Engineer', role: 'admin' },
-  member: { password: 'member123', name: 'Lab Member', role: 'member' },
-};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((userId: string, password: string): boolean => {
-    const found = MOCK_USERS[userId.toLowerCase()];
-    if (found && found.password === password) {
-      setUser({ id: userId.toLowerCase(), name: found.name, role: found.role });
+  const login = useCallback(async (userId: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .select('id, name, role, college')
+        .eq('user_id', userId.toUpperCase())
+        .eq('password', password)
+        .single();
+
+      if (error || !data) {
+        return false;
+      }
+
+      setUser({
+        id: data.id,
+        name: data.name,
+        role: data.role as Role,
+        college: data.college ?? undefined,
+      });
       return true;
+    } catch {
+      return false;
     }
-    return false;
   }, []);
 
   const logout = useCallback(() => setUser(null), []);

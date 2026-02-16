@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
-import { MOCK_PROJECTS } from '@/data/projects';
+import { fetchProjects } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Project } from '@/data/projects';
 import heroBg from '@/assets/hero-bg.jpg';
@@ -13,6 +13,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    fetchProjects().then(setProjects);
+  }, []);
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {
@@ -26,7 +31,6 @@ const Index = () => {
     <div className="relative">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Hero background image */}
         <div className="absolute inset-0">
           <img src={heroBg} alt="" className="w-full h-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
@@ -45,7 +49,6 @@ const Index = () => {
             Build to Innovate
           </p>
 
-          {/* Animated underline */}
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
@@ -73,7 +76,6 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Section divider */}
       <div className="section-divider" />
 
       {/* Featured Projects */}
@@ -93,16 +95,22 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-            {MOCK_PROJECTS.map((project, i) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onViewMore={handleViewMore}
-                index={i}
-              />
-            ))}
-          </div>
+          {projects.length === 0 ? (
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+              {projects.map((project, i) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onViewMore={handleViewMore}
+                  index={i}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
