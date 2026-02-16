@@ -53,18 +53,17 @@ const LoginModal = ({ open, onClose }: Props) => {
             style={{ zIndex: 40 }}
             onClick={onClose}
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed w-[90%] max-w-[420px] glass-strong rounded-2xl p-8 glow-box"
-            style={{
-              zIndex: 50,
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-            }}
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{ zIndex: 50, pointerEvents: 'none' }}
           >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-[420px] glass-strong rounded-2xl p-8 glow-box"
+              style={{ pointerEvents: 'auto' }}
+            >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl gradient-text tracking-wider">Engineer Login</h2>
               <button onClick={onClose} className="text-muted-foreground hover:text-primary transition-colors">
@@ -105,7 +104,8 @@ const LoginModal = ({ open, onClose }: Props) => {
             <p className="text-xs text-muted-foreground mt-4 text-center">
               Demo: admin/admin123 or member/member123
             </p>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>,

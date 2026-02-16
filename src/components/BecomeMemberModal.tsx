@@ -33,18 +33,17 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
             style={{ zIndex: 40 }}
             onClick={onClose}
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed w-[90%] max-w-[420px] glass-strong rounded-2xl p-10 glow-box text-center"
-            style={{
-              zIndex: 50,
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-            }}
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{ zIndex: 50, pointerEvents: 'none' }}
           >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-[420px] glass-strong rounded-2xl p-10 glow-box text-center"
+              style={{ pointerEvents: 'auto' }}
+            >
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-muted-foreground hover:text-primary transition-colors"
@@ -73,7 +72,8 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
             <p className="text-xs text-muted-foreground mt-4">
               Applications reviewed within 48 hours
             </p>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>,
