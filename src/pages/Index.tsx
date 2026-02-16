@@ -269,12 +269,12 @@ const Index = () => {
       <div className="section-divider" />
 
       {/* Become Member Section */}
-      <section id="become-member" className="py-24 px-4 flex items-center justify-center">
+      <section id="become-member" className="py-24 px-4 overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass-strong rounded-2xl p-12 glow-box text-center max-w-lg"
+          className="glass-strong rounded-2xl p-12 glow-box text-center max-w-lg mx-auto"
         >
           <h2 className="text-3xl font-display font-bold gradient-text glow-text mb-6">
             Join InnoveX Engineering Collective

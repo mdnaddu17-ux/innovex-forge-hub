@@ -27,7 +27,7 @@ const Header = () => {
             <img
               src={innovexLogo}
               alt="InnoveX Hub"
-              className="h-14 md:h-[44px] lg:h-[48px] w-auto animate-logo-pulse"
+              className="h-14 md:h-[44px] lg:h-[48px] w-auto scale-[2] animate-logo-pulse"
             />
           </div>
 

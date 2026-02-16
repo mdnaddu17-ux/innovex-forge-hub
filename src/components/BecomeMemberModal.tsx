@@ -19,12 +19,12 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
             className="fixed inset-0 z-[80] bg-background/80"
             onClick={onClose}
           />
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-[90] top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-lg glass-strong rounded-2xl p-10 glow-box text-center"
-            style={{ transform: 'translate(-50%, -50%)' }}
+            className="w-full max-w-lg glass-strong rounded-2xl p-10 glow-box text-center pointer-events-auto"
           >
             <button
               onClick={onClose}
@@ -62,7 +62,8 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
             <p className="text-xs text-muted-foreground mt-4">
               Applications reviewed within 48 hours
             </p>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
