@@ -118,15 +118,20 @@ const AdminPanel = () => {
   // Add goal handler
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!goalText.trim() || !goalImageFile) {
+      toast({ title: 'Missing Fields', description: 'Goal text and image are both required.', variant: 'destructive' });
+      return;
+    }
+
     setAddingGoal(true);
     try {
-      let imageUrl = '';
-      if (goalImageFile) {
-        imageUrl = await uploadImage(goalImageFile);
-      }
+      const imageUrl = await uploadImage(goalImageFile);
+
       const { error } = await supabase.from('goals').insert({
-        text: goalText,
+        text: goalText.trim(),
         image_url: imageUrl,
+        created_at: new Date().toISOString(),
       });
       if (error) throw error;
       toast({ title: 'Goal Added', description: 'New future goal published.' });

@@ -138,12 +138,12 @@ const ProjectDetail = () => {
             </>
           )}
 
-          {project.video && project.video.trim() !== '' && (
+          {project.video_link && project.video_link.trim() !== '' && (
             <>
               <section className="mb-8">
                 <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
                 <a
-                  href={project.video}
+                  href={project.video_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
