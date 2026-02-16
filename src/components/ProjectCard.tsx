@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import type { Project } from '@/data/projects';
+import ImageWithFallback from '@/components/ImageWithFallback';
 
 interface Props {
   project: Project;
@@ -21,7 +22,7 @@ const ProjectCard = ({ project, onViewMore, index }: Props) => {
     >
       {/* Image */}
       <div className="relative overflow-hidden h-48">
-        <img
+        <ImageWithFallback
           src={project.image}
           alt={project.title}
           loading="lazy"

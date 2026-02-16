@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useAuth, Role } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,16 +6,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface MenuItem {
   label: string;
   path: string;
+  anchor?: string;
   roles: Role[];
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: 'Home', path: '/', roles: ['guest', 'member', 'admin'] },
-  { label: 'About Us', path: '/about', roles: ['guest', 'member', 'admin'] },
-  { label: 'Projects', path: '/projects', roles: ['guest', 'member', 'admin'] },
+  { label: 'Home', path: '/', anchor: 'home', roles: ['guest', 'member', 'admin'] },
+  { label: 'About Us', path: '/', anchor: 'about', roles: ['guest', 'member', 'admin'] },
+  { label: 'Projects', path: '/', anchor: 'projects', roles: ['guest', 'member', 'admin'] },
   { label: 'Add Project', path: '/add-project', roles: ['member', 'admin'] },
   { label: 'Admin Panel', path: '/admin', roles: ['admin'] },
-  { label: 'Future Goals', path: '/future-goals', roles: ['guest', 'member', 'admin'] },
+  { label: 'Future Goals', path: '/', anchor: 'goals', roles: ['guest', 'member', 'admin'] },
 ];
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 const SlideMenu = ({ open, onClose }: Props) => {
   const { role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const visibleItems = MENU_ITEMS.filter((item) => {
     if (item.label === 'Become Member') return role === 'guest';
@@ -34,8 +36,28 @@ const SlideMenu = ({ open, onClose }: Props) => {
 
   // Add Become Member for guests
   if (role === 'guest') {
-    visibleItems.splice(2, 0, { label: 'Become Member', path: '/become-member', roles: ['guest'] });
+    visibleItems.splice(2, 0, { label: 'Become Member', path: '/', anchor: 'become-member', roles: ['guest'] });
   }
+
+  const handleMenuClick = (item: MenuItem) => {
+    onClose();
+    if (item.anchor) {
+      if (location.pathname === '/') {
+        // Already on home, just scroll
+        setTimeout(() => {
+          document.getElementById(item.anchor!)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        // Navigate to home first, then scroll after mount
+        navigate('/');
+        setTimeout(() => {
+          document.getElementById(item.anchor!)?.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+      }
+    } else {
+      navigate(item.path);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -69,10 +91,7 @@ const SlideMenu = ({ open, onClose }: Props) => {
                   initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: i * 0.07 }}
-                  onClick={() => {
-                    navigate(item.path);
-                    onClose();
-                  }}
+                  onClick={() => handleMenuClick(item)}
                   className="text-left py-3 px-4 font-display text-sm tracking-widest text-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
                 >
                   {item.label}

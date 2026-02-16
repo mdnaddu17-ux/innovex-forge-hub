@@ -46,7 +46,15 @@ const BecomeMemberModal = ({ open, onClose }: Props) => {
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <Button variant="hero" size="lg" className="px-10">
+              <Button
+                variant="hero"
+                size="lg"
+                className="px-10"
+                onClick={() => {
+                  window.location.href =
+                    'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No/Any reference Id:';
+                }}
+              >
                 Apply Now
               </Button>
             </motion.div>
