@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ const LoginModal = ({ open, onClose }: Props) => {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -48,15 +49,17 @@ const LoginModal = ({ open, onClose }: Props) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background"
+            className="fixed inset-0 bg-black/80"
+            style={{ zIndex: 40 }}
             onClick={onClose}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-50 w-[90%] max-w-[420px] glass-strong rounded-2xl p-8 glow-box"
+            className="fixed w-[90%] max-w-[420px] glass-strong rounded-2xl p-8 glow-box"
             style={{
+              zIndex: 50,
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
@@ -105,7 +108,8 @@ const LoginModal = ({ open, onClose }: Props) => {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

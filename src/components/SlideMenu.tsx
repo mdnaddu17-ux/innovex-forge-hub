@@ -45,7 +45,7 @@ const SlideMenu = ({ open, onClose }: Props) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-background/60"
+            className="fixed inset-0 z-30 bg-background/60"
             onClick={onClose}
           />
           <motion.nav
@@ -53,7 +53,7 @@ const SlideMenu = ({ open, onClose }: Props) => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed left-0 top-0 bottom-0 z-[70] w-72 glass-strong flex flex-col"
+            className="fixed left-0 top-0 bottom-0 z-[35] w-72 glass-strong flex flex-col"
             style={{ borderRight: '1px solid hsla(50, 100%, 83%, 0.2)' }}
           >
             <div className="flex items-center justify-end p-4">
