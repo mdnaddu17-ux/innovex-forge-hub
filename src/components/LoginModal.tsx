@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,17 @@ const LoginModal = ({ open, onClose }: Props) => {
   const [password, setPassword] = useState('');
   const { login } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +48,19 @@ const LoginModal = ({ open, onClose }: Props) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] bg-background/70"
+            className="fixed inset-0 z-40 bg-background"
             onClick={onClose}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed z-[90] top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md glass-strong rounded-2xl p-8 glow-box"
-            style={{ transform: 'translate(-50%, -50%)' }}
+            className="fixed z-50 w-[90%] max-w-[420px] glass-strong rounded-2xl p-8 glow-box"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl gradient-text tracking-wider">Engineer Login</h2>

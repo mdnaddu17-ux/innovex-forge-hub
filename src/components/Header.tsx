@@ -13,25 +13,25 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
-        <div className="container mx-auto flex items-center justify-between h-20 px-4">
+      <header className="fixed top-0 left-0 right-0 z-20 glass-strong">
+        <div className="relative container mx-auto flex items-center justify-between h-24 md:h-28 px-4">
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 text-primary hover:text-accent transition-colors"
+            className="relative z-10 p-2 text-primary hover:text-accent transition-colors"
             aria-label="Open menu"
           >
             <Menu size={24} />
           </button>
 
-          <div className="absolute left-1/2 -translate-x-1/2">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <img
               src={innovexLogo}
               alt="InnoveX Hub"
-              className="h-14 md:h-[44px] lg:h-[48px] w-auto animate-logo-pulse"
+              className="w-[130px] md:w-[170px] h-auto animate-logo-pulse pointer-events-auto"
             />
           </div>
 
-          <div>
+          <div className="relative z-10">
             {user ? (
               <Button variant="glow" size="sm" onClick={logout}>
                 Logout
