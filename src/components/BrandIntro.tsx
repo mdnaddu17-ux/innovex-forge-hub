@@ -27,7 +27,7 @@ const BrandIntro = ({ onComplete }: Props) => {
             transition={{ duration: 0.6 }}
             className="font-display text-3xl md:text-5xl gradient-text glow-text tracking-[0.3em] mb-10"
           >
-            INNOVEX.IN
+            INNOVEXHUB.IN
           </motion.h1>
 
           <div className="flex flex-col items-center gap-3">
