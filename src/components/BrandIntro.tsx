@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -10,16 +10,25 @@ const BrandIntro = ({ onComplete }: Props) => {
 
   const words = ['Build', 'Innovate', 'Exhibit'];
 
+  // Failsafe: always dismiss the intro after 5 seconds no matter what
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <AnimatePresence>
+    <AnimatePresence
+      onExitComplete={() => {
+        onComplete();
+      }}
+    >
       {visible && (
         <motion.div
           className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center"
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
-          onAnimationComplete={(def: any) => {
-            if (def?.opacity === 0) onComplete();
-          }}
         >
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
