@@ -11,12 +11,12 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: 'Home', path: '/', anchor: 'home', roles: ['guest', 'member', 'admin'] },
-  { label: 'About Us', path: '/', anchor: 'about', roles: ['guest', 'member', 'admin'] },
-  { label: 'Projects', path: '/', anchor: 'projects', roles: ['guest', 'member', 'admin'] },
-  { label: 'Add Project', path: '/add-project', roles: ['member', 'admin'] },
+  { label: 'Home', path: '/', anchor: 'home', roles: ['guest', 'viewer', 'creator', 'admin'] },
+  { label: 'About Us', path: '/', anchor: 'about', roles: ['guest', 'viewer', 'creator', 'admin'] },
+  { label: 'Projects', path: '/', anchor: 'projects', roles: ['guest', 'viewer', 'creator', 'admin'] },
+  { label: 'Add Project', path: '/add-project', roles: ['creator', 'admin'] },
   { label: 'Admin Panel', path: '/admin', roles: ['admin'] },
-  { label: 'Future Goals', path: '/', anchor: 'goals', roles: ['guest', 'member', 'admin'] },
+  { label: 'Future Goals', path: '/', anchor: 'goals', roles: ['guest', 'viewer', 'creator', 'admin'] },
 ];
 
 interface Props {
