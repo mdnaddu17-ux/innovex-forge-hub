@@ -1,34 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
 import { MOCK_PROJECTS } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import type { Project } from '@/data/projects';
 
 const Projects = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (data && data.length > 0) setProjects(data);
-    })();
-  }, []);
+  const dbProjects = useQuery(api.queries.getProjects);
+
+  const projects: Project[] =
+    dbProjects && dbProjects.length > 0
+      ? dbProjects.map((p) => ({
+          _id: p._id,
+          title: p.title,
+          description: p.description,
+          imageUrl: p.imageUrl,
+          components: p.components,
+          videoUrl: p.videoUrl,
+          sourceCode: p.sourceCode,
+          createdBy: p.createdBy,
+          createdAt: p.createdAt,
+        }))
+      : MOCK_PROJECTS;
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {
       setMemberModal(true);
     } else {
-      navigate(`/projects/${project.id}`);
+      navigate(`/projects/${project._id}`);
     }
   };
 
@@ -50,7 +57,7 @@ const Projects = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {projects.map((project, i) => (
-            <ProjectCard key={project.id} project={project} onViewMore={handleViewMore} index={i} />
+            <ProjectCard key={project._id} project={project} onViewMore={handleViewMore} index={i} />
           ))}
         </div>
       </div>

@@ -23,7 +23,7 @@ const ProjectCard = ({ project, onViewMore, index }: Props) => {
       {/* Image */}
       <div className="relative overflow-hidden h-48">
         <ImageWithFallback
-          src={project.image_url}
+          src={project.imageUrl}
           alt={project.title}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
