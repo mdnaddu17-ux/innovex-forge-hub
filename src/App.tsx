@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import EngineeringBackground from "@/components/EngineeringBackground";
 import BrandIntro from "@/components/BrandIntro";
-import Index from "./pages/Index";
+import GitHubShowcase from "./pages/GitHubShowcase";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import About from "./pages/About";
@@ -37,7 +37,7 @@ const App = () => {
             <Header />
             <main className="relative z-10">
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<GitHubShowcase />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/about" element={<About />} />
