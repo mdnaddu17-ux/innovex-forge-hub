@@ -17,12 +17,14 @@ interface DbProject {
   image_url: string;
   components: string;
   source_code: string;
+  video_url: string;
+  created_by: string;
   created_at: string;
 }
 
 interface DbGoal {
   id: string;
-  text: string;
+  goal_text: string;
   image_url: string;
   created_at: string;
 }
@@ -127,12 +129,11 @@ const AdminPanel = () => {
 
     setAddingGoal(true);
     try {
-      const imageUrl = await uploadImage(goalImageFile);
+      const imageUrl = await uploadImage(goalImageFile, 'goal-images');
 
       const { error } = await supabase.from('goals').insert({
-        text: goalText.trim(),
+        goal_text: goalText.trim(),
         image_url: imageUrl,
-        created_at: new Date().toISOString(),
       });
       if (error) throw error;
       toast({ title: 'Goal Added', description: 'New future goal published.' });
@@ -293,7 +294,7 @@ const AdminPanel = () => {
                           {g.image_url && (
                             <ImageWithFallback src={g.image_url} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
                           )}
-                          <p className="text-sm text-foreground/80 flex-1 line-clamp-2">{g.text}</p>
+                          <p className="text-sm text-foreground/80 flex-1 line-clamp-2">{g.goal_text}</p>
                           <button onClick={() => handleDeleteGoal(g.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 size={16} />
                           </button>

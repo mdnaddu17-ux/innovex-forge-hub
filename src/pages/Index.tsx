@@ -59,7 +59,7 @@ const APPLY_MAILTO =
 
 interface DbGoal {
   id: string;
-  text: string;
+  goal_text: string;
   image_url: string;
   created_at: string;
 }
@@ -271,7 +271,7 @@ const Index = () => {
                     <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
                       <ImageWithFallback
                         src={goal.image_url}
-                        alt={goal.text}
+                        alt={goal.goal_text}
                         loading="lazy"
                         className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                       />
@@ -279,7 +279,7 @@ const Index = () => {
                   )}
 
                   <div className={goal.image_url ? 'md:w-1/2' : 'w-full'}>
-                    <p className="text-foreground/70 leading-relaxed">{goal.text}</p>
+                    <p className="text-foreground/70 leading-relaxed">{goal.goal_text}</p>
                   </div>
                 </motion.div>
               );
