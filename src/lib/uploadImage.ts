@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 
-export async function uploadImage(file: File): Promise<string> {
+export async function uploadImage(
+  file: File,
+  bucket: "project-images" | "goal-images" = "project-images"
+): Promise<string> {
   if (!file) throw new Error("Image required");
 
   if (!file.type.startsWith("image/"))
@@ -9,17 +12,17 @@ export async function uploadImage(file: File): Promise<string> {
   if (file.size > 2 * 1024 * 1024)
     throw new Error("Image max size 2MB");
 
-  const filePath = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, "-")}`;
+  const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
 
   const { error } = await supabase.storage
-    .from("uploads")
-    .upload(filePath, file);
+    .from(bucket)
+    .upload(fileName, file);
 
   if (error) throw error;
 
   const { data } = supabase.storage
-    .from("uploads")
-    .getPublicUrl(filePath);
+    .from(bucket)
+    .getPublicUrl(fileName);
 
   if (!data?.publicUrl) throw new Error("Public URL generation failed");
 

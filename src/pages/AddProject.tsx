@@ -1,17 +1,17 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
 import { uploadImage } from '@/lib/uploadImage';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const AddProject = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -91,16 +91,16 @@ const AddProject = () => {
 
     setSubmitting(true);
     try {
-      const imageUrl = await uploadImage(imageFile);
+      const imageUrl = await uploadImage(imageFile, 'project-images');
 
       const { error } = await supabase.from('projects').insert({
         title: form.title.trim(),
         description: form.description.trim(),
         image_url: imageUrl,
-        components: form.components?.trim() || '',
+        components: form.components?.trim() || null,
         source_code: form.sourceCode.trim(),
-        video_link: form.video?.trim() || null,
-        created_at: new Date().toISOString(),
+        video_url: form.video?.trim() || null,
+        created_by: user?.id ?? null,
       });
 
       if (error) throw error;
@@ -109,7 +109,10 @@ const AddProject = () => {
         title: 'Project Submitted',
         description: 'Your project has been added to the lab.',
       });
-      navigate('/');
+
+      // Reset form
+      setForm({ title: '', description: '', video: '', components: '', sourceCode: '' });
+      clearImage();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong.';
       toast({ title: 'Upload Failed', description: message, variant: 'destructive' });
