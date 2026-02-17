@@ -4,14 +4,20 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
+import { useConvex } from 'convex/react';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { uploadImage } from '@/lib/uploadImage';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const AddProject = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const convex = useConvex();
+  const createProject = useMutation(api.mutations.createProject);
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -70,6 +76,11 @@ const AddProject = () => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (!user) {
+      toast({ title: 'Not Logged In', description: 'Please log in first.', variant: 'destructive' });
+      return;
+    }
+
     if (!form.title.trim() || !form.description.trim() || !imageFile) {
       toast({
         title: 'Missing Fields',
@@ -91,24 +102,25 @@ const AddProject = () => {
 
     setSubmitting(true);
     try {
-      const imageUrl = await uploadImage(imageFile);
+      const { storageId, imageUrl } = await uploadImage(convex, imageFile);
 
-      const { error } = await supabase.from('projects').insert({
+      await createProject({
+        userId: user.id,
         title: form.title.trim(),
         description: form.description.trim(),
-        image_url: imageUrl,
-        components: form.components?.trim() || '',
-        source_code: form.sourceCode.trim(),
-        video_link: form.video?.trim() || null,
-        created_at: new Date().toISOString(),
+        imageId: storageId,
+        imageUrl,
+        components: form.components?.trim() || undefined,
+        sourceCode: form.sourceCode.trim(),
+        videoUrl: form.video?.trim() || undefined,
       });
-
-      if (error) throw error;
 
       toast({
         title: 'Project Submitted',
         description: 'Your project has been added to the lab.',
       });
+      setForm({ title: '', description: '', video: '', components: '', sourceCode: '' });
+      clearImage();
       navigate('/');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong.';

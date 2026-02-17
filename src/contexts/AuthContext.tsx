@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useConvex } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export type Role = 'guest' | 'member' | 'admin';
 
@@ -7,7 +8,6 @@ export interface User {
   id: string;
   name: string;
   role: Role;
-  dbId?: string; // uuid from users table
 }
 
 interface AuthContextType {
@@ -21,29 +21,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const convex = useConvex();
 
   const login = useCallback(async (userId: string, password: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, user_id, password, name, role')
-        .eq('user_id', userId)
-        .eq('password', password)
-        .single();
-
-      if (error || !data) return false;
+      const result = await convex.query(api.queries.getUser, { userId, password });
+      if (!result) return false;
 
       setUser({
-        id: data.user_id,
-        name: data.name ?? data.user_id,
-        role: data.role as Role,
-        dbId: data.id,
+        id: result.userId,
+        name: result.name ?? result.userId,
+        role: result.role as Role,
       });
       return true;
     } catch {
       return false;
     }
-  }, []);
+  }, [convex]);
 
   const logout = useCallback(() => setUser(null), []);
 

@@ -1,31 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { useConvex, useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { uploadImage } from '@/lib/uploadImage';
+import { useAuth } from '@/contexts/AuthContext';
 import { Upload, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import ImageWithFallback from '@/components/ImageWithFallback';
+import type { Id } from '../../convex/_generated/dataModel';
 
 const tabs = ['Create User', 'Goals', 'Projects'] as const;
 type Tab = (typeof tabs)[number];
-
-interface DbProject {
-  id: string;
-  title: string;
-  description: string;
-  image_url: string;
-  components: string;
-  source_code: string;
-  created_at: string;
-}
-
-interface DbGoal {
-  id: string;
-  text: string;
-  image_url: string;
-  created_at: string;
-}
 
 const inputClass =
   'w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 transition-all';
@@ -33,6 +19,18 @@ const inputClass =
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Create User');
   const { toast } = useToast();
+  const convex = useConvex();
+  const { user } = useAuth();
+
+  // Convex queries (reactive)
+  const dbGoals = useQuery(api.queries.getGoals);
+  const dbProjects = useQuery(api.queries.getProjects);
+
+  // Convex mutations
+  const createUserMut = useMutation(api.mutations.createUser);
+  const createGoalMut = useMutation(api.mutations.createGoal);
+  const deleteGoalMut = useMutation(api.mutations.deleteGoal);
+  const deleteProjectMut = useMutation(api.mutations.deleteProject);
 
   // Create User state
   const [newUserId, setNewUserId] = useState('');
@@ -49,46 +47,21 @@ const AdminPanel = () => {
   const [goalImagePreview, setGoalImagePreview] = useState<string | null>(null);
   const goalFileRef = useRef<HTMLInputElement>(null);
   const [addingGoal, setAddingGoal] = useState(false);
-  const [goals, setGoals] = useState<DbGoal[]>([]);
-
-  // Projects state
-  const [projects, setProjects] = useState<DbProject[]>([]);
-
-  // Fetch goals and projects
-  useEffect(() => {
-    fetchGoals();
-    fetchProjects();
-  }, []);
-
-  const fetchGoals = async () => {
-    const { data } = await supabase
-      .from('goals')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setGoals(data);
-  };
-
-  const fetchProjects = async () => {
-    const { data } = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (data) setProjects(data);
-  };
 
   // Create user handler
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setCreatingUser(true);
     try {
-      const { error } = await supabase.from('users').insert({
-        user_id: newUserId,
+      await createUserMut({
+        callerUserId: user.id,
+        userId: newUserId,
         password: newUserPwd,
         name: newUserName,
-        college: newUserCollege,
+        college: newUserCollege || undefined,
         role: newUserRole,
       });
-      if (error) throw error;
       toast({ title: 'User Created', description: 'New engineer added to the system.' });
       setNewUserId('');
       setNewUserPwd('');
@@ -96,7 +69,7 @@ const AdminPanel = () => {
       setNewUserCollege('');
       setNewUserRole('member');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message || err.data, variant: 'destructive' });
     } finally {
       setCreatingUser(false);
     }
@@ -119,6 +92,7 @@ const AdminPanel = () => {
   // Add goal handler
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
 
     if (!goalText.trim() || !goalImageFile) {
       toast({ title: 'Missing Fields', description: 'Goal text and image are both required.', variant: 'destructive' });
@@ -127,47 +101,49 @@ const AdminPanel = () => {
 
     setAddingGoal(true);
     try {
-      const imageUrl = await uploadImage(goalImageFile);
+      const { storageId, imageUrl } = await uploadImage(convex, goalImageFile);
 
-      const { error } = await supabase.from('goals').insert({
-        text: goalText.trim(),
-        image_url: imageUrl,
-        created_at: new Date().toISOString(),
+      await createGoalMut({
+        userId: user.id,
+        goalText: goalText.trim(),
+        imageId: storageId,
+        imageUrl,
       });
-      if (error) throw error;
       toast({ title: 'Goal Added', description: 'New future goal published.' });
       setGoalText('');
       setGoalImageFile(null);
       setGoalImagePreview(null);
       if (goalFileRef.current) goalFileRef.current.value = '';
-      fetchGoals();
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message || err.data, variant: 'destructive' });
     } finally {
       setAddingGoal(false);
     }
   };
 
   // Delete handlers
-  const handleDeleteGoal = async (id: string) => {
-    const { error } = await supabase.from('goals').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+  const handleDeleteGoal = async (id: Id<"goals">) => {
+    if (!user) return;
+    try {
+      await deleteGoalMut({ userId: user.id, goalId: id });
       toast({ title: 'Goal Deleted' });
-      fetchGoals();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || err.data, variant: 'destructive' });
     }
   };
 
-  const handleDeleteProject = async (id: string) => {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+  const handleDeleteProject = async (id: Id<"projects">) => {
+    if (!user) return;
+    try {
+      await deleteProjectMut({ userId: user.id, projectId: id });
       toast({ title: 'Project Deleted' });
-      fetchProjects();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || err.data, variant: 'destructive' });
     }
   };
+
+  const goals = dbGoals ?? [];
+  const projects = dbProjects ?? [];
 
   return (
     <div className="pt-24 pb-16 px-4 min-h-screen">
@@ -289,12 +265,12 @@ const AdminPanel = () => {
                     <h3 className="font-display text-sm tracking-wider text-primary mb-4">Existing Goals</h3>
                     <div className="space-y-3">
                       {goals.map((g) => (
-                        <div key={g.id} className="flex items-center gap-3 glass rounded-lg p-3">
-                          {g.image_url && (
-                            <ImageWithFallback src={g.image_url} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                        <div key={g._id} className="flex items-center gap-3 glass rounded-lg p-3">
+                          {g.imageUrl && (
+                            <ImageWithFallback src={g.imageUrl} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
                           )}
-                          <p className="text-sm text-foreground/80 flex-1 line-clamp-2">{g.text}</p>
-                          <button onClick={() => handleDeleteGoal(g.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
+                          <p className="text-sm text-foreground/80 flex-1 line-clamp-2">{g.goalText}</p>
+                          <button onClick={() => handleDeleteGoal(g._id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -313,15 +289,15 @@ const AdminPanel = () => {
                 ) : (
                   <div className="space-y-3">
                     {projects.map((p) => (
-                      <div key={p.id} className="flex items-center gap-3 glass rounded-lg p-3">
-                        {p.image_url && (
-                          <ImageWithFallback src={p.image_url} alt={p.title ?? ''} className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                      <div key={p._id} className="flex items-center gap-3 glass rounded-lg p-3">
+                        {p.imageUrl && (
+                          <ImageWithFallback src={p.imageUrl} alt={p.title ?? ''} className="w-12 h-12 rounded object-cover flex-shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-display text-primary truncate">{p.title}</p>
                           <p className="text-xs text-muted-foreground truncate">{p.description}</p>
                         </div>
-                        <button onClick={() => handleDeleteProject(p.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
+                        <button onClick={() => handleDeleteProject(p._id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
                           <Trash2 size={16} />
                         </button>
                       </div>

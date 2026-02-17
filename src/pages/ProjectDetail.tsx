@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { MOCK_PROJECTS } from '@/data/projects';
-import { supabase } from '@/lib/supabase';
 import ImageWithFallback from '@/components/ImageWithFallback';
-import type { Project } from '@/data/projects';
+import type { Id } from '../../convex/_generated/dataModel';
 
 const SourceCodeSection = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
@@ -52,26 +53,30 @@ const SourceCodeSection = ({ code }: { code: string }) => {
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null | undefined>(undefined);
 
-  useEffect(() => {
-    (async () => {
-      // Try fetching from DB first
-      const { data } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single();
+  // Try to use the id as a Convex ID; if not valid, fall back to mock
+  const isConvexId = id && !['1', '2', '3', '4'].includes(id);
+  const dbProject = useQuery(
+    api.queries.getProject,
+    isConvexId ? { id: id as Id<"projects"> } : "skip"
+  );
 
-      if (data) {
-        setProject(data);
-      } else {
-        // Fallback to mock data
-        const mock = MOCK_PROJECTS.find((p) => p.id === id) ?? null;
-        setProject(mock);
-      }
-    })();
-  }, [id]);
+  // Resolve project: DB first, then mock fallback
+  const project = isConvexId
+    ? dbProject
+      ? {
+          _id: dbProject._id,
+          title: dbProject.title,
+          description: dbProject.description,
+          imageUrl: dbProject.imageUrl,
+          components: dbProject.components,
+          videoUrl: dbProject.videoUrl,
+          sourceCode: dbProject.sourceCode,
+        }
+      : dbProject === null
+        ? null
+        : undefined // loading
+    : MOCK_PROJECTS.find((p) => p._id === id) ?? null;
 
   if (project === undefined) {
     return (
@@ -96,7 +101,7 @@ const ProjectDetail = () => {
     <div className="pt-20 pb-16 min-h-screen">
       {/* Hero image */}
       <div className="relative h-64 md:h-96 overflow-hidden">
-        <ImageWithFallback src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+        <ImageWithFallback src={project.imageUrl} alt={project.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
@@ -138,12 +143,12 @@ const ProjectDetail = () => {
             </>
           )}
 
-          {project.video_link && project.video_link.trim() !== '' && (
+          {project.videoUrl && project.videoUrl.trim() !== '' && (
             <>
               <section className="mb-8">
                 <h2 className="font-display text-sm tracking-widest text-primary/70 mb-3">VIDEO</h2>
                 <a
-                  href={project.video_link}
+                  href={project.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-accent hover:text-primary transition-colors font-display text-sm tracking-wider"
@@ -155,8 +160,8 @@ const ProjectDetail = () => {
             </>
           )}
 
-          {project.source_code && (
-            <SourceCodeSection code={project.source_code} />
+          {project.sourceCode && (
+            <SourceCodeSection code={project.sourceCode} />
           )}
         </motion.div>
       </div>

@@ -1,15 +1,8 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import goalImage from '@/assets/goal-future.jpg';
-
-interface DbGoal {
-  id: string;
-  text: string;
-  image_url: string;
-  created_at: string;
-}
 
 const STATIC_GOALS = [
   {
@@ -30,17 +23,7 @@ const STATIC_GOALS = [
 ];
 
 const FutureGoals = () => {
-  const [dbGoals, setDbGoals] = useState<DbGoal[] | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (data) setDbGoals(data);
-    })();
-  }, []);
+  const dbGoals = useQuery(api.queries.getGoals);
 
   return (
     <div className="pt-24 pb-16 px-4 min-h-screen">
@@ -65,25 +48,25 @@ const FutureGoals = () => {
                 const isEven = i % 2 === 0;
                 return (
                   <motion.div
-                    key={goal.id}
+                    key={goal._id}
                     initial={{ opacity: 0, x: isEven ? -60 : 60 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: '-50px' }}
                     transition={{ duration: 0.6 }}
                     className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}
                   >
-                    {goal.image_url && (
+                    {goal.imageUrl && (
                       <div className="md:w-1/2 overflow-hidden rounded-2xl glass group">
                         <ImageWithFallback
-                          src={goal.image_url}
-                          alt={goal.text}
+                          src={goal.imageUrl}
+                          alt={goal.goalText}
                           loading="lazy"
                           className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                     )}
-                    <div className={goal.image_url ? 'md:w-1/2' : 'w-full'}>
-                      <p className="text-foreground/70 leading-relaxed">{goal.text}</p>
+                    <div className={goal.imageUrl ? 'md:w-1/2' : 'w-full'}>
+                      <p className="text-foreground/70 leading-relaxed">{goal.goalText}</p>
                     </div>
                   </motion.div>
                 );
