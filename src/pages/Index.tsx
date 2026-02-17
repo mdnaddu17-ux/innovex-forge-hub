@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
-import { MOCK_PROJECTS } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import type { Project } from '@/data/projects';
+import { useProjects } from '@/hooks/useProjects';
+import { listGoals } from '@/services/platformStore';
+import { useRealtime } from '@/hooks/useRealtime';
+import type { ProjectRecord as Project } from '@/types/domain';
 import heroBg from '@/assets/hero-bg.jpg';
 import goalImage from '@/assets/goal-future.jpg';
 import { Rocket, Eye, Cpu, Heart } from 'lucide-react';
@@ -57,30 +58,13 @@ const GOALS = [
 const APPLY_MAILTO =
   'mailto:innovexhub01@gmail.com?subject=Membership Application&body=Name:%0ACollege Name:%0AUSN No / Reference ID:%0A%0AWhy do you want InnoveX Hub membership? (Minimum 100 words):%0A';
 
-interface DbGoal {
-  id: string;
-  text: string;
-  image_url: string;
-  created_at: string;
-}
-
 const Index = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
-  const [dbProjects, setDbProjects] = useState<Project[]>(MOCK_PROJECTS);
-  const [dbGoals, setDbGoals] = useState<DbGoal[] | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const [projRes, goalRes] = await Promise.all([
-        supabase.from('projects').select('*').order('created_at', { ascending: false }),
-        supabase.from('goals').select('*').order('created_at', { ascending: false }),
-      ]);
-      if (projRes.data && projRes.data.length > 0) setDbProjects(projRes.data);
-      if (goalRes.data) setDbGoals(goalRes.data);
-    })();
-  }, []);
+  const { projects: dbProjects } = useProjects();
+  const { lastEventAt } = useRealtime();
+  const dbGoals = useMemo(() => listGoals(), [lastEventAt]);
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {
@@ -256,7 +240,7 @@ const Index = () => {
           </motion.div>
 
           <div className="space-y-16">
-            {(dbGoals && dbGoals.length > 0 ? dbGoals : null)?.map((goal, i) => {
+            {(dbGoals.length > 0 ? dbGoals : null)?.map((goal, i) => {
               const isEven = i % 2 === 0;
               return (
                 <motion.div

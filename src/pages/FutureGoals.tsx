@@ -1,15 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { listGoals } from '@/services/platformStore';
+import { useRealtime } from '@/hooks/useRealtime';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import goalImage from '@/assets/goal-future.jpg';
 
-interface DbGoal {
-  id: string;
-  text: string;
-  image_url: string;
-  created_at: string;
-}
 
 const STATIC_GOALS = [
   {
@@ -30,17 +25,8 @@ const STATIC_GOALS = [
 ];
 
 const FutureGoals = () => {
-  const [dbGoals, setDbGoals] = useState<DbGoal[] | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (data) setDbGoals(data);
-    })();
-  }, []);
+  const { lastEventAt } = useRealtime();
+  const dbGoals = useMemo(() => listGoals(), [lastEventAt]);
 
   return (
     <div className="pt-24 pb-16 px-4 min-h-screen">

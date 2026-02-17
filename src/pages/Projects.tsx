@@ -1,28 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ProjectCard from '@/components/ProjectCard';
 import BecomeMemberModal from '@/components/BecomeMemberModal';
-import { MOCK_PROJECTS } from '@/data/projects';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import type { Project } from '@/data/projects';
+import { useProjects } from '@/hooks/useProjects';
+import type { ProjectRecord as Project } from '@/types/domain';
 
 const Projects = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [memberModal, setMemberModal] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (data && data.length > 0) setProjects(data);
-    })();
-  }, []);
+  const { projects } = useProjects();
 
   const handleViewMore = (project: Project) => {
     if (role === 'guest') {

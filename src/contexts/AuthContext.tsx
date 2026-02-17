@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { login as loginService, logout as logoutService, refreshSession, restoreSession, subscribeRealtime } from '@/services/platformStore';
+import type { PublicRole } from '@/types/domain';
 
-export type Role = 'guest' | 'member' | 'admin';
+export type Role = PublicRole;
 
 export interface User {
   id: string;
+  userId: string;
   name: string;
-  role: Role;
-  dbId?: string; // uuid from users table
+  role: Exclude<Role, 'guest'>;
 }
 
 interface AuthContextType {
@@ -22,38 +23,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback(async (userId: string, password: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, user_id, password, name, role')
-        .eq('user_id', userId)
-        .eq('password', password)
-        .single();
-
-      if (error || !data) return false;
-
-      setUser({
-        id: data.user_id,
-        name: data.name ?? data.user_id,
-        role: data.role as Role,
-        dbId: data.id,
-      });
-      return true;
-    } catch {
-      return false;
+  useEffect(() => {
+    const restored = restoreSession();
+    if (restored) {
+      setUser({ id: restored.user.id, name: restored.user.name, userId: restored.user.user_id, role: restored.user.role });
     }
+    const timer = setInterval(() => refreshSession(), 60_000);
+    const unsubscribe = subscribeRealtime(() => {
+      const current = restoreSession();
+      if (!current) return setUser(null);
+      setUser({ id: current.user.id, name: current.user.name, userId: current.user.user_id, role: current.user.role });
+    });
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const login = async (userId: string, password: string) => {
+    const result = loginService(userId, password);
+    if (!result) return false;
+    setUser({ id: result.user.id, name: result.user.name, userId: result.user.user_id, role: result.user.role });
+    return true;
+  };
 
-  const role: Role = user?.role ?? 'guest';
+  const logout = () => {
+    logoutService();
+    setUser(null);
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, role, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, role: user?.role ?? 'guest', login, logout }),
+    [user],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

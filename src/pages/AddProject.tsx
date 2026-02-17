@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
 import { uploadImage } from '@/lib/uploadImage';
-import { supabase } from '@/lib/supabase';
+import { createProject } from '@/services/platformStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -17,12 +18,13 @@ const AddProject = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
   const [form, setForm] = useState({
     title: '',
     description: '',
     video: '',
     components: '',
-    sourceCode: '',
+    source_code: '',
   });
 
   const handleChange = (field: string, value: string) => {
@@ -80,7 +82,7 @@ const AddProject = () => {
       return;
     }
 
-    if (!form.sourceCode || !form.sourceCode.trim()) {
+    if (!form.source_code || !form.source_code.trim()) {
       toast({
         title: 'Missing Fields',
         description: 'Source code or repository link is required.',
@@ -91,19 +93,17 @@ const AddProject = () => {
 
     setSubmitting(true);
     try {
-      const imageUrl = await uploadImage(imageFile);
+      const image_url = await uploadImage(imageFile, user?.id ?? 'anonymous');
 
-      const { error } = await supabase.from('projects').insert({
+      createProject({
+        owner_user_id: user?.id ?? 'anonymous',
         title: form.title.trim(),
         description: form.description.trim(),
-        image_url: imageUrl,
+        image_url,
         components: form.components?.trim() || '',
-        source_code: form.sourceCode.trim(),
-        video_link: form.video?.trim() || null,
-        created_at: new Date().toISOString(),
+        source_code: form.source_code.trim(),
+        video_link: form.video?.trim() || undefined,
       });
-
-      if (error) throw error;
 
       toast({
         title: 'Project Submitted',
@@ -176,8 +176,8 @@ const AddProject = () => {
                 Source Code / Repository Link
               </label>
               <textarea
-                value={form.sourceCode}
-                onChange={(e) => handleChange('sourceCode', e.target.value)}
+                value={form.source_code}
+                onChange={(e) => handleChange('source_code', e.target.value)}
                 rows={3}
                 placeholder="GitHub link, Drive link, or paste raw code"
                 className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all resize-none"

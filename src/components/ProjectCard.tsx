@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import type { Project } from '@/data/projects';
+import type { ProjectRecord as Project } from '@/types/domain';
 import ImageWithFallback from '@/components/ImageWithFallback';
 
 interface Props {
